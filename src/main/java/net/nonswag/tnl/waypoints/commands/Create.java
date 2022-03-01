@@ -8,8 +8,6 @@ import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 
 import javax.annotation.Nonnull;
-import java.util.ArrayList;
-import java.util.List;
 
 class Create extends PlayerSubCommand {
 
@@ -23,30 +21,15 @@ class Create extends PlayerSubCommand {
         String[] args = invocation.arguments();
         TNLPlayer player = (TNLPlayer) source.player();
         if (args.length < 2) throw new InvalidUseException(this);
-        boolean isPublic = false;
-        if (args.length >= 3) isPublic = Boolean.parseBoolean(args[2]);
-        Waypoint waypoint = new Waypoint(args[1], player.worldManager().getLocation());
-        if (!isPublic) waypoint.setOwner(player.getUniqueId());
-        if (!waypoint.isRegistered()) {
-            source.sendMessage("%prefix% §aCreated new waypoint named §6" + waypoint.register().getName());
-            waypoint.showAll();
-        } else source.sendMessage("%prefix% §cA waypoint named §4" + waypoint.getName() + "§c does already exist");
-    }
-
-    @Nonnull
-    @Override
-    protected List<String> suggest(@Nonnull Invocation invocation) {
-        String[] args = invocation.arguments();
-        List<String> suggestions = new ArrayList<>();
-        if (args.length != 3) return suggestions;
-        suggestions.add("true");
-        suggestions.add("false");
-        return suggestions;
+        Waypoint waypoint = Waypoint.getWaypoint(player.getUniqueId(), args[1]);
+        if (waypoint == null) {
+            waypoint = new Waypoint(player.getUniqueId(), args[1], player.worldManager().getLocation(), Waypoint.Color.WHITE);
+            source.sendMessage("%prefix% §aCreated new waypoint named §6" + waypoint.register().show(player));
+        } else source.sendMessage("%prefix% §cA waypoint named §4" + waypoint + "§c does already exist");
     }
 
     @Override
     public void usage(@Nonnull Invocation invocation) {
-        CommandSource source = invocation.source();
-        source.sendMessage("%prefix% §c/waypoint create §8[§6Name§8] §8(§6Public§8)");
+        invocation.source().sendMessage("%prefix% §c/waypoint create §8[§6Name§8]");
     }
 }

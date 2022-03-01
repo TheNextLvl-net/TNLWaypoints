@@ -1,8 +1,11 @@
 package net.nonswag.tnl.waypoints.api;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import lombok.Getter;
-import net.nonswag.tnl.core.api.file.formats.spearat.TSVFile;
-import net.nonswag.tnl.listener.TNLListener;
+import lombok.Setter;
+import net.nonswag.tnl.core.api.file.formats.JsonFile;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -13,70 +16,54 @@ import org.bukkit.block.data.BlockData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Getter
+@Setter
 public class Waypoint {
+    @Nonnull
+    private static final HashMap<UUID, List<Waypoint>> waypoints = new HashMap<>();
+    @Nonnull
+    private static final JsonFile saves = new JsonFile("plugins/Waypoints", "saves.json");
 
     @Nonnull
-    public static final HashMap<String, Waypoint> WAYPOINTS = new HashMap<>();
-    @Nonnull
-    private static final TSVFile saves = new TSVFile("plugins/Waypoints", "saves.tsv");
-
+    private final UUID owner;
     @Nonnull
     private final String name;
     @Nonnull
-    private Location location;
-    @Nullable
-    private UUID owner;
+    private final Location location;
+    @Nonnull
+    private Color color;
 
-    public Waypoint(@Nonnull String name, @Nonnull Location location, @Nullable UUID owner) {
+    public Waypoint(@Nonnull UUID owner, @Nonnull String name, @Nonnull Location location, @Nonnull Color color) {
+        this.owner = owner;
         this.name = name;
-        this.location = location.getBlock().getLocation();
-        this.owner = owner;
-    }
-
-    public Waypoint(@Nonnull String name, @Nonnull Location location) {
-        this(name, location, null);
-    }
-
-    @Nonnull
-    public Waypoint setLocation(@Nonnull Location location) {
         this.location = location;
-        return this;
-    }
-
-    @Nonnull
-    public Waypoint setOwner(@Nullable UUID owner) {
-        this.owner = owner;
-        return this;
+        this.color = color;
     }
 
     @Nonnull
     public Waypoint register() {
-        if (!isRegistered()) WAYPOINTS.put(getName(), this);
+        List<Waypoint> waypoints = getWaypoints(getOwner());
+        if (!waypoints.contains(this)) {
+            waypoints.add(this);
+            Waypoint.waypoints.put(getOwner(), waypoints);
+        }
         return this;
     }
 
     public void unregister() {
-        WAYPOINTS.remove(getName());
+        List<Waypoint> waypoints = getWaypoints(getOwner());
+        waypoints.remove(this);
+        Waypoint.waypoints.put(getOwner(), waypoints);
     }
 
-    public boolean isRegistered() {
-        return WAYPOINTS.containsKey(getName());
-    }
-
-    public void hideAll() {
-        for (TNLPlayer all : TNLListener.getOnlinePlayers()) hide(all);
-    }
-
-    public void hide(@Nonnull TNLPlayer player) {
-        if (getOwner() != null && !player.getUniqueId().equals(getOwner())) return;
+    @Nonnull
+    public Waypoint hide(@Nonnull TNLPlayer player) {
+        if (!player.getUniqueId().equals(getOwner())) return this;
         Location location = getLocation().clone().subtract(0, 1, 0);
-        if (!player.worldManager().getWorld().equals(location.getWorld())) return;
+        if (!player.worldManager().getWorld().equals(location.getWorld())) return this;
         player.worldManager().sendBlockChange(location);
         player.worldManager().sendBlockChange(location.subtract(0, 1, 0));
         List<BlockFace> faces = List.of(BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST,
@@ -84,69 +71,150 @@ public class Waypoint {
         for (BlockFace face : faces) {
             player.worldManager().sendBlockChange(location.getBlock().getRelative(face).getLocation());
         }
+        return this;
     }
 
-    public void showAll() {
-        for (TNLPlayer all : TNLListener.getOnlinePlayers()) show(all);
-    }
-
-    public void show(@Nonnull TNLPlayer player) {
-        if (getOwner() != null && !player.getUniqueId().equals(getOwner())) return;
+    @Nonnull
+    public Waypoint show(@Nonnull TNLPlayer player) {
+        if (!player.getUniqueId().equals(getOwner())) return this;
         Location location = getLocation().clone().subtract(0, 1, 0);
-        if (!player.worldManager().getWorld().equals(location.getWorld())) return;
-        player.worldManager().sendBlockChange(location, Material.BEACON.createBlockData());
-        BlockData block = Material.IRON_BLOCK.createBlockData();
-        player.worldManager().sendBlockChange(location.subtract(0, 1, 0), block);
+        if (!player.worldManager().getWorld().equals(location.getWorld())) return this;
+        player.worldManager().sendBlockChange(location, getColor().getBlockData());
+        player.worldManager().sendBlockChange(location.subtract(0, 1, 0), Material.BEACON.createBlockData());
+        BlockData iron = Material.IRON_BLOCK.createBlockData();
+        player.worldManager().sendBlockChange(location.subtract(0, 1, 0), iron);
         List<BlockFace> faces = List.of(BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST,
                 BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST);
         for (BlockFace face : faces) {
             Location loc = location.getBlock().getRelative(face).getLocation();
-            player.worldManager().sendBlockChange(loc, block);
+            player.worldManager().sendBlockChange(loc, iron);
+        }
+        return this;
+    }
+
+    @Override
+    public String toString() {
+        return getName();
+    }
+
+    @Nonnull
+    public static List<Waypoint> getWaypoints(@Nonnull UUID owner) {
+        return waypoints.getOrDefault(owner, new ArrayList<>());
+    }
+
+    @Nullable
+    public static Waypoint getWaypoint(@Nonnull UUID owner, @Nonnull String name) {
+        List<Waypoint> waypoints = getWaypoints(owner);
+        for (Waypoint waypoint : waypoints) if (waypoint.getName().equalsIgnoreCase(name)) return waypoint;
+        return null;
+    }
+
+    public static void loadAll() {
+        JsonObject root = saves.getJsonElement().getAsJsonObject();
+        for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
+            try {
+                UUID owner = UUID.fromString(entry.getKey());
+                JsonArray waypoints = entry.getValue().getAsJsonArray();
+                for (JsonElement element : waypoints) {
+                    JsonObject waypoint = element.getAsJsonObject();
+                    if (!waypoint.has("name")) continue;
+                    if (!waypoint.has("location")) continue;
+                    if (!waypoint.has("color")) continue;
+                    String name = waypoint.get("name").getAsString();
+                    Location location = parseLocation(waypoint.get("location").getAsString());
+                    Color color = Color.getColor(waypoint.get("color").getAsString());
+                    if (location != null && color != null) new Waypoint(owner, name, location, color).register();
+                }
+            } catch (Exception ignored) {
+            }
         }
     }
 
     @Nullable
-    public static Waypoint get(@Nonnull String name) {
-        return WAYPOINTS.get(name);
-    }
-
-    public static void loadAll() {
-        for (List<String> entry : saves.getEntries()) {
-            if (entry.size() < 2) continue;
-            String name = entry.get(0);
-            String[] loc = entry.get(1).split(", ");
-            if (loc.length < 4) continue;
-            World world = Bukkit.getWorld(loc[0]);
-            int x = Integer.parseInt(loc[1]);
-            int y = Integer.parseInt(loc[2]);
-            int z = Integer.parseInt(loc[3]);
-            Location location = new Location(world, x, y, z);
-            UUID owner = null;
-            if (entry.size() >= 3) {
-                try {
-                    owner = UUID.fromString(entry.get(2));
-                } catch (IllegalArgumentException ignored) {
-                }
-            }
-            new Waypoint(name, location, owner).register();
+    private static Location parseLocation(@Nonnull String string) {
+        String[] split = string.split(", ");
+        if (split.length != 4 && split.length != 6) return null;
+        World world = Bukkit.getWorld(split[0]);
+        double x = Double.parseDouble(split[1]);
+        double y = Double.parseDouble(split[2]);
+        double z = Double.parseDouble(split[3]);
+        float yaw = 0;
+        float pitch = 0;
+        if (split.length == 6) {
+            yaw = Float.parseFloat(split[4]);
+            pitch = Float.parseFloat(split[5]);
         }
+        return new Location(world, x, y, z, yaw, pitch);
     }
 
     public static void exportAll() {
-        List<List<String>> entries = new ArrayList<>();
-        for (Waypoint waypoint : WAYPOINTS.values()) {
-            List<String> entry = new ArrayList<>();
-            Location location = waypoint.getLocation();
-            UUID owner = waypoint.getOwner();
-            World world = location.getWorld();
-            if (world == null) continue;
-            entry.add(waypoint.getName());
-            entry.add(world.getName() + ", " + location.getBlockX() + ", " +
-                    location.getBlockY() + ", " + location.getBlockZ());
-            if (owner != null) entry.add(owner.toString());
-            entries.add(entry);
-        }
-        saves.setEntries(entries);
+        JsonObject root = new JsonObject();
+        waypoints.forEach((owner, waypoints) -> {
+            if (waypoints.isEmpty()) return;
+            JsonArray array = new JsonArray();
+            for (Waypoint waypoint : waypoints) {
+                JsonObject object = new JsonObject();
+                object.addProperty("name", waypoint.getName());
+                Location location = waypoint.getLocation();
+                String s = location.getWorld().getName() + ", " + location.getX() + ", " + location.getY() + ", " +
+                        location.getZ() + ", " + location.getYaw() + ", " + location.getPitch();
+                object.addProperty("location", s);
+                object.addProperty("color", waypoint.getColor().name());
+                array.add(object);
+            }
+            root.add(owner.toString(), array);
+        });
+        saves.setJsonElement(root);
         saves.save();
+    }
+
+    @Getter
+    public enum Color {
+        WHITE(Material.WHITE_STAINED_GLASS),
+        ORANGE(Material.ORANGE_STAINED_GLASS),
+        MAGENTA(Material.MAGENTA_STAINED_GLASS),
+        LIGHT_BLUE(Material.LIGHT_BLUE_STAINED_GLASS),
+        YELLOW(Material.YELLOW_STAINED_GLASS),
+        LIME(Material.LIME_STAINED_GLASS),
+        PINK(Material.PINK_STAINED_GLASS),
+        GRAY(Material.GRAY_STAINED_GLASS),
+        LIGHT_GRAY(Material.LIGHT_GRAY_STAINED_GLASS),
+        CYAN(Material.CYAN_STAINED_GLASS),
+        PURPLE(Material.PURPLE_STAINED_GLASS),
+        BLUE(Material.BLUE_STAINED_GLASS),
+        BROWN(Material.BROWN_STAINED_GLASS),
+        GREEN(Material.GREEN_STAINED_GLASS),
+        RED(Material.RED_STAINED_GLASS),
+        BLACK(Material.BLACK_STAINED_GLASS);
+
+        @Nonnull
+        private final String name;
+        @Nonnull
+        private final Material glass;
+        @Nullable
+        private BlockData blockData = null;
+
+        Color(@Nonnull Material glass) {
+            this.glass = glass;
+            this.name = name().toLowerCase().replace("_", "-");
+        }
+
+        @Nonnull
+        public BlockData getBlockData() {
+            return blockData == null ? blockData = glass.createBlockData() : blockData;
+        }
+
+        @Nullable
+        public static Color getColor(@Nonnull String name) {
+            for (Color color : values()) {
+                if (color.name().equalsIgnoreCase(name) || color.getName().equalsIgnoreCase(name)) return color;
+            }
+            return null;
+        }
+
+        @Override
+        public String toString() {
+            return getName();
+        }
     }
 }

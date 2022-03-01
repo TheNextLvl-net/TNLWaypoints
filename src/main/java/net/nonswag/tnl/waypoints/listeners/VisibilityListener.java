@@ -23,6 +23,6 @@ public class VisibilityListener implements Listener {
     }
 
     private void show(@Nonnull TNLPlayer player) {
-        Waypoint.WAYPOINTS.forEach((name, waypoint) -> waypoint.show(player));
+        for (Waypoint waypoint : Waypoint.getWaypoints(player.getUniqueId())) waypoint.show(player);
     }
 }
