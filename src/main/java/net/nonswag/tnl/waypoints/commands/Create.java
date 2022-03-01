@@ -4,6 +4,7 @@ import net.nonswag.tnl.core.api.command.CommandSource;
 import net.nonswag.tnl.core.api.command.Invocation;
 import net.nonswag.tnl.listener.api.command.brigadier.PlayerSubCommand;
 import net.nonswag.tnl.listener.api.command.exceptions.InvalidUseException;
+import net.nonswag.tnl.listener.api.location.BlockLocation;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 
@@ -23,7 +24,8 @@ class Create extends PlayerSubCommand {
         if (args.length < 2) throw new InvalidUseException(this);
         Waypoint waypoint = Waypoint.getWaypoint(player.getUniqueId(), args[1]);
         if (waypoint == null) {
-            waypoint = new Waypoint(player.getUniqueId(), args[1], player.worldManager().getLocation(), Waypoint.Color.WHITE);
+            BlockLocation location = new BlockLocation(player.worldManager().getLocation());
+            waypoint = new Waypoint(player.getUniqueId(), args[1], location, Waypoint.Color.WHITE);
             source.sendMessage("%prefix% §aCreated new waypoint named §6" + waypoint.register().show(player));
         } else source.sendMessage("%prefix% §cA waypoint named §4" + waypoint + "§c does already exist");
     }

@@ -12,6 +12,7 @@ public class WaypointCommand extends BrigadierCommand {
         addSubCommand(new Teleport());
         addSubCommand(new Create());
         addSubCommand(new Delete());
+        addSubCommand(new Color());
         addSubCommand(new List());
     }
 

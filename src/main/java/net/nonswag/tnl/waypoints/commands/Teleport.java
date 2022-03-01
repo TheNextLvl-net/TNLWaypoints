@@ -25,8 +25,8 @@ class Teleport extends PlayerSubCommand {
         if (args.length < 2) throw new InvalidUseException(this);
         Waypoint waypoint = Waypoint.getWaypoint(player.getUniqueId(), args[1]);
         if (waypoint == null) throw new InvalidUseException(this);
+        Location location = waypoint.getLocation().toLocation().add(0.5, 0, 0.5);
         WorldManager manager = player.worldManager();
-        Location location = waypoint.getLocation().clone().add(0.5, 0, 0.5);
         location.setYaw(manager.getLocation().getYaw());
         location.setPitch(manager.getLocation().getPitch());
         manager.teleport(location);

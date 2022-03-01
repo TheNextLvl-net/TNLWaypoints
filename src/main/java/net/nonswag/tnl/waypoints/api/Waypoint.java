@@ -4,8 +4,10 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
-import lombok.Setter;
 import net.nonswag.tnl.core.api.file.formats.JsonFile;
+import net.nonswag.tnl.core.utils.StringUtil;
+import net.nonswag.tnl.listener.api.holograms.Hologram;
+import net.nonswag.tnl.listener.api.location.BlockLocation;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -16,11 +18,9 @@ import org.bukkit.block.data.BlockData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.List;
 import java.util.*;
 
 @Getter
-@Setter
 public class Waypoint {
     @Nonnull
     private static final HashMap<UUID, List<Waypoint>> waypoints = new HashMap<>();
@@ -32,15 +32,25 @@ public class Waypoint {
     @Nonnull
     private final String name;
     @Nonnull
-    private final Location location;
+    private final BlockLocation location;
     @Nonnull
     private Color color;
+    @Nonnull
+    private final Hologram hologram;
 
-    public Waypoint(@Nonnull UUID owner, @Nonnull String name, @Nonnull Location location, @Nonnull Color color) {
+    public Waypoint(@Nonnull UUID owner, @Nonnull String name, @Nonnull BlockLocation location, @Nonnull Color color) {
+        this.hologram = new Hologram(StringUtil.random(5), false, "§8* §7Waypoint§8: §6" + name);
         this.owner = owner;
         this.name = name;
         this.location = location;
         this.color = color;
+        this.hologram.setLocation(location.toLocation().add(0.5, 0.5, 0.5));
+    }
+
+    @Nonnull
+    public Waypoint setColor(@Nonnull Color color) {
+        this.color = color;
+        return this;
     }
 
     @Nonnull
@@ -62,15 +72,15 @@ public class Waypoint {
     @Nonnull
     public Waypoint hide(@Nonnull TNLPlayer player) {
         if (!player.getUniqueId().equals(getOwner())) return this;
-        Location location = getLocation().clone().subtract(0, 1, 0);
+        BlockLocation location = getLocation().clone();
         if (!player.worldManager().getWorld().equals(location.getWorld())) return this;
-        player.worldManager().sendBlockChange(location);
-        player.worldManager().sendBlockChange(location.subtract(0, 1, 0));
+        for (int i = 0; i < 3; i++) player.worldManager().sendBlockChange(location.subtract(0, 1, 0));
         List<BlockFace> faces = List.of(BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST,
                 BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST);
         for (BlockFace face : faces) {
             player.worldManager().sendBlockChange(location.getBlock().getRelative(face).getLocation());
         }
+        hologram.unload(player);
         return this;
     }
 
@@ -89,6 +99,7 @@ public class Waypoint {
             Location loc = location.getBlock().getRelative(face).getLocation();
             player.worldManager().sendBlockChange(loc, iron);
         }
+        hologram.reload(player);
         return this;
     }
 
@@ -121,7 +132,7 @@ public class Waypoint {
                     if (!waypoint.has("location")) continue;
                     if (!waypoint.has("color")) continue;
                     String name = waypoint.get("name").getAsString();
-                    Location location = parseLocation(waypoint.get("location").getAsString());
+                    BlockLocation location = parseLocation(waypoint.get("location").getAsString());
                     Color color = Color.getColor(waypoint.get("color").getAsString());
                     if (location != null && color != null) new Waypoint(owner, name, location, color).register();
                 }
@@ -131,20 +142,14 @@ public class Waypoint {
     }
 
     @Nullable
-    private static Location parseLocation(@Nonnull String string) {
+    private static BlockLocation parseLocation(@Nonnull String string) {
         String[] split = string.split(", ");
-        if (split.length != 4 && split.length != 6) return null;
+        if (split.length != 4) return null;
         World world = Bukkit.getWorld(split[0]);
         double x = Double.parseDouble(split[1]);
         double y = Double.parseDouble(split[2]);
         double z = Double.parseDouble(split[3]);
-        float yaw = 0;
-        float pitch = 0;
-        if (split.length == 6) {
-            yaw = Float.parseFloat(split[4]);
-            pitch = Float.parseFloat(split[5]);
-        }
-        return new Location(world, x, y, z, yaw, pitch);
+        return new BlockLocation(world, x, y, z);
     }
 
     public static void exportAll() {
@@ -155,10 +160,8 @@ public class Waypoint {
             for (Waypoint waypoint : waypoints) {
                 JsonObject object = new JsonObject();
                 object.addProperty("name", waypoint.getName());
-                Location location = waypoint.getLocation();
-                String s = location.getWorld().getName() + ", " + location.getX() + ", " + location.getY() + ", " +
-                        location.getZ() + ", " + location.getYaw() + ", " + location.getPitch();
-                object.addProperty("location", s);
+                BlockLocation l = waypoint.getLocation();
+                object.addProperty("location", l.getWorld().getName() + ", " + l.getX() + ", " + l.getY() + ", " + l.getZ());
                 object.addProperty("color", waypoint.getColor().name());
                 array.add(object);
             }

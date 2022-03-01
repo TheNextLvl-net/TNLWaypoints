@@ -12,7 +12,7 @@ import java.util.List;
 
 class Color extends PlayerSubCommand {
 
-    protected Color() {
+    Color() {
         super("color");
     }
 
@@ -26,7 +26,7 @@ class Color extends PlayerSubCommand {
         if (args.length >= 3) {
             Waypoint.Color color = Waypoint.Color.getColor(args[2]);
             if (color != null) {
-                waypoint.setColor(color);
+                waypoint.setColor(color).show(player);
                 player.messenger().sendMessage("%prefix% §aChanged the waypoint's color to §6" + color);
             } else player.messenger().sendMessage("%prefix% §c/waypoint color " + waypoint + " §8[§6Color§8]");
         } else player.messenger().sendMessage("%prefix% §7Color §8(§a" + waypoint + "§8): §6" + waypoint.getColor());
