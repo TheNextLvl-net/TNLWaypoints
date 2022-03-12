@@ -161,6 +161,7 @@ public class Waypoint {
                 JsonObject object = new JsonObject();
                 object.addProperty("name", waypoint.getName());
                 BlockLocation l = waypoint.getLocation();
+                if (l.getWorld() == null) continue;
                 object.addProperty("location", l.getWorld().getName() + ", " + l.getX() + ", " + l.getY() + ", " + l.getZ());
                 object.addProperty("color", waypoint.getColor().name());
                 array.add(object);
