@@ -5,3 +5,4 @@ api-version: "1.13"
 website: "https://www.thenextlvl.net"
 depend: ["TNLListener"]
 softdepend: ["TNLWorlds"]
+author: "NonSwag"
