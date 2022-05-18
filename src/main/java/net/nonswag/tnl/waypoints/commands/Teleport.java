@@ -1,8 +1,8 @@
 package net.nonswag.tnl.waypoints.commands;
 
 import net.nonswag.tnl.core.api.command.Invocation;
-import net.nonswag.tnl.listener.api.command.brigadier.PlayerSubCommand;
 import net.nonswag.tnl.listener.api.command.exceptions.InvalidUseException;
+import net.nonswag.tnl.listener.api.command.simple.PlayerSubCommand;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.listener.api.player.manager.WorldManager;
 import net.nonswag.tnl.waypoints.api.Waypoint;

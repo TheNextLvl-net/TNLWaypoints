@@ -2,7 +2,7 @@ package net.nonswag.tnl.waypoints.commands;
 
 import net.nonswag.tnl.core.api.command.CommandSource;
 import net.nonswag.tnl.core.api.command.Invocation;
-import net.nonswag.tnl.listener.api.command.brigadier.SubCommand;
+import net.nonswag.tnl.listener.api.command.simple.SubCommand;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 

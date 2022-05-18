@@ -1,11 +1,11 @@
 package net.nonswag.tnl.waypoints.commands;
 
 import net.nonswag.tnl.core.api.command.CommandSource;
-import net.nonswag.tnl.listener.api.command.brigadier.BrigadierCommand;
+import net.nonswag.tnl.listener.api.command.simple.SimpleCommand;
 
 import javax.annotation.Nonnull;
 
-public class WaypointCommand extends BrigadierCommand {
+public class WaypointCommand extends SimpleCommand {
 
     public WaypointCommand() {
         super("waypoint", "tnl.waypoint");
