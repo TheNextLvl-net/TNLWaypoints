@@ -25,8 +25,8 @@ class Create extends PlayerSubCommand {
         Waypoint waypoint = Waypoint.getWaypoint(player.getUniqueId(), args[1]);
         if (waypoint == null) {
             BlockLocation location = new BlockLocation(player.worldManager().getLocation());
-            waypoint = new Waypoint(player.getUniqueId(), args[1], location, Waypoint.Color.WHITE);
-            source.sendMessage("%prefix% §aCreated new waypoint named §6" + waypoint.register().show(player));
+            waypoint = new Waypoint(player.getUniqueId(), args[1], location, Waypoint.Color.WHITE).register();
+            source.sendMessage("%prefix% §aCreated new waypoint named §6" + waypoint.show(player));
         } else source.sendMessage("%prefix% §cA waypoint named §4" + waypoint + "§c does already exist");
     }
 

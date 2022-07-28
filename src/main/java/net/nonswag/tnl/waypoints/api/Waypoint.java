@@ -9,10 +9,7 @@ import net.nonswag.tnl.core.utils.StringUtil;
 import net.nonswag.tnl.listener.api.holograms.Hologram;
 import net.nonswag.tnl.listener.api.location.BlockLocation;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 
@@ -56,10 +53,9 @@ public class Waypoint {
     @Nonnull
     public Waypoint register() {
         List<Waypoint> waypoints = getWaypoints(getOwner());
-        if (!waypoints.contains(this)) {
-            waypoints.add(this);
-            Waypoint.waypoints.put(getOwner(), waypoints);
-        }
+        if (waypoints.contains(this)) return this;
+        waypoints.add(this);
+        Waypoint.waypoints.put(getOwner(), waypoints);
         return this;
     }
 
@@ -110,7 +106,14 @@ public class Waypoint {
 
     @Nonnull
     public static List<Waypoint> getWaypoints(@Nonnull UUID owner) {
-        return waypoints.getOrDefault(owner, new ArrayList<>());
+        return Waypoint.waypoints.getOrDefault(owner, new ArrayList<>());
+    }
+
+    @Nonnull
+    public static List<Waypoint> getWaypoints(@Nonnull UUID owner, @Nonnull Chunk chunk) {
+        List<Waypoint> waypoints = new ArrayList<>(getWaypoints(owner));
+        waypoints.removeIf(waypoint -> !waypoint.getLocation().getChunk().equals(chunk));
+        return waypoints;
     }
 
     @Nullable
