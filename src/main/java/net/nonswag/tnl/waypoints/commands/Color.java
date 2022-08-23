@@ -39,7 +39,7 @@ class Color extends PlayerSubCommand {
         String[] args = invocation.arguments();
         List<String> suggestions = new ArrayList<>();
         if (args.length == 2) {
-            for (Waypoint waypoint : Waypoint.getWaypoints(player.getUniqueId())) suggestions.add(waypoint.getName());
+            Waypoint.getWaypoints(player.getUniqueId()).forEach(waypoint -> suggestions.add(waypoint.getName()));
         } else if (args.length == 3) {
             for (Waypoint.Color color : Waypoint.Color.values()) suggestions.add(color.getName());
         }

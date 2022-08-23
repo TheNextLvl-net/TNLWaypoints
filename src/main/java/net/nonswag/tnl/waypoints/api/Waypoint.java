@@ -1,11 +1,9 @@
 package net.nonswag.tnl.waypoints.api;
 
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import lombok.Getter;
 import net.nonswag.tnl.core.api.file.formats.JsonFile;
-import net.nonswag.tnl.core.utils.StringUtil;
 import net.nonswag.tnl.holograms.api.Hologram;
 import net.nonswag.tnl.listener.api.location.BlockLocation;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
@@ -15,7 +13,10 @@ import org.bukkit.block.data.BlockData;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.UUID;
 
 @Getter
 public class Waypoint {
@@ -36,7 +37,7 @@ public class Waypoint {
     private final Hologram hologram;
 
     public Waypoint(@Nonnull UUID owner, @Nonnull String name, @Nonnull BlockLocation location, @Nonnull Color color) {
-        this.hologram = new Hologram(StringUtil.random(5), "§8* §7Waypoint§8: §6%s".formatted(name));
+        this.hologram = new Hologram().setLines("§8* §7Waypoint§8: §6%s".formatted(name));
         this.owner = owner;
         this.name = name;
         this.location = location;
@@ -53,7 +54,7 @@ public class Waypoint {
     @Nonnull
     public Waypoint register() {
         List<Waypoint> waypoints = getWaypoints(getOwner());
-        if (waypoints.contains(this)) return this;
+        if (waypoints.contains(this)) throw new IllegalStateException("Waypoint already registered");
         waypoints.add(this);
         Waypoint.waypoints.put(getOwner(), waypoints);
         return this;
@@ -61,6 +62,7 @@ public class Waypoint {
 
     public void unregister() {
         List<Waypoint> waypoints = getWaypoints(getOwner());
+        if(!waypoints.contains(this)) throw new IllegalStateException("Waypoint is not registered");
         waypoints.remove(this);
         Waypoint.waypoints.put(getOwner(), waypoints);
     }
@@ -119,24 +121,20 @@ public class Waypoint {
     }
 
     public static void loadAll() {
-        JsonObject root = saves.getJsonElement().getAsJsonObject();
-        for (Map.Entry<String, JsonElement> entry : root.entrySet()) {
-            try {
-                UUID owner = UUID.fromString(entry.getKey());
-                JsonArray waypoints = entry.getValue().getAsJsonArray();
-                for (JsonElement element : waypoints) {
-                    JsonObject waypoint = element.getAsJsonObject();
-                    if (!waypoint.has("name")) continue;
-                    if (!waypoint.has("location")) continue;
-                    if (!waypoint.has("color")) continue;
-                    String name = waypoint.get("name").getAsString();
-                    BlockLocation location = parseLocation(waypoint.get("location").getAsString());
-                    Color color = Color.getColor(waypoint.get("color").getAsString());
-                    if (location != null && color != null) new Waypoint(owner, name, location, color).register();
-                }
-            } catch (Exception ignored) {
-            }
-        }
+        saves.getJsonElement().getAsJsonObject().entrySet().forEach(entry -> {
+            UUID owner = UUID.fromString(entry.getKey());
+            JsonArray waypoints = entry.getValue().getAsJsonArray();
+            waypoints.forEach(element -> {
+                JsonObject waypoint = element.getAsJsonObject();
+                if (!waypoint.has("name")) return;
+                if (!waypoint.has("location")) return;
+                if (!waypoint.has("color")) return;
+                String name = waypoint.get("name").getAsString();
+                BlockLocation location = parseLocation(waypoint.get("location").getAsString());
+                Color color = Color.getColor(waypoint.get("color").getAsString());
+                if (location != null && color != null) new Waypoint(owner, name, location, color).register();
+            });
+        });
     }
 
     @Nullable

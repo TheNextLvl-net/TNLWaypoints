@@ -39,9 +39,8 @@ class Teleport extends PlayerSubCommand {
         TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         List<String> suggestions = new ArrayList<>();
-        if (args.length == 2) {
-            for (Waypoint waypoint : Waypoint.getWaypoints(player.getUniqueId())) suggestions.add(waypoint.getName());
-        }
+        if (args.length != 2) return suggestions;
+        Waypoint.getWaypoints(player.getUniqueId()).forEach(waypoint -> suggestions.add(waypoint.getName()));
         return suggestions;
     }
 
