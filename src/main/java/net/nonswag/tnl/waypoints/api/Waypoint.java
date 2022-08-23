@@ -6,7 +6,7 @@ import com.google.gson.JsonObject;
 import lombok.Getter;
 import net.nonswag.tnl.core.api.file.formats.JsonFile;
 import net.nonswag.tnl.core.utils.StringUtil;
-import net.nonswag.tnl.listener.api.holograms.Hologram;
+import net.nonswag.tnl.holograms.api.Hologram;
 import net.nonswag.tnl.listener.api.location.BlockLocation;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import org.bukkit.*;
@@ -36,7 +36,7 @@ public class Waypoint {
     private final Hologram hologram;
 
     public Waypoint(@Nonnull UUID owner, @Nonnull String name, @Nonnull BlockLocation location, @Nonnull Color color) {
-        this.hologram = new Hologram(StringUtil.random(5), false, "§8* §7Waypoint§8: §6" + name);
+        this.hologram = new Hologram(StringUtil.random(5), "§8* §7Waypoint§8: §6%s".formatted(name));
         this.owner = owner;
         this.name = name;
         this.location = location;
@@ -73,10 +73,8 @@ public class Waypoint {
         for (int i = 0; i < 3; i++) player.worldManager().sendBlockChange(location.subtract(0, 1, 0));
         List<BlockFace> faces = List.of(BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST,
                 BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST);
-        for (BlockFace face : faces) {
-            player.worldManager().sendBlockChange(location.getBlock().getRelative(face).getLocation());
-        }
-        hologram.unload(player);
+        faces.forEach(face -> player.worldManager().sendBlockChange(location.getBlock().getRelative(face).getLocation()));
+        player.hologramManager().unload(hologram);
         return this;
     }
 
@@ -91,11 +89,8 @@ public class Waypoint {
         player.worldManager().sendBlockChange(location.subtract(0, 1, 0), iron);
         List<BlockFace> faces = List.of(BlockFace.EAST, BlockFace.NORTH, BlockFace.SOUTH, BlockFace.WEST,
                 BlockFace.SOUTH_EAST, BlockFace.SOUTH_WEST, BlockFace.NORTH_EAST, BlockFace.NORTH_WEST);
-        for (BlockFace face : faces) {
-            Location loc = location.getBlock().getRelative(face).getLocation();
-            player.worldManager().sendBlockChange(loc, iron);
-        }
-        hologram.reload(player);
+        faces.forEach(face -> player.worldManager().sendBlockChange(location.getBlock().getRelative(face).getLocation(), iron));
+        player.hologramManager().reload(hologram);
         return this;
     }
 
