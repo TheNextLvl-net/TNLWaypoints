@@ -27,6 +27,7 @@ public class Waypoints extends TNLPlugin {
             if (Settings.AUTO_UPDATER.getValue()) new PluginUpdate(this).downloadUpdate();
         });
     }
+
     @Override
     public void disable() {
         Listener.getOnlinePlayers().forEach(all -> Waypoint.getWaypoints(all.getUniqueId()).forEach(waypoint -> waypoint.hide(all)));
