@@ -3,7 +3,7 @@ package net.nonswag.tnl.waypoints.api;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import lombok.Getter;
-import net.nonswag.tnl.core.api.file.formats.JsonFile;
+import net.nonswag.core.api.file.formats.JsonFile;
 import net.nonswag.tnl.holograms.api.Hologram;
 import net.nonswag.tnl.listener.api.location.BlockLocation;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;

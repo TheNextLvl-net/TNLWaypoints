@@ -3,6 +3,7 @@ package net.nonswag.tnl.waypoints;
 import net.nonswag.tnl.listener.Listener;
 import net.nonswag.tnl.listener.api.plugin.PluginUpdate;
 import net.nonswag.tnl.listener.api.plugin.TNLPlugin;
+import net.nonswag.tnl.listener.api.settings.Settings;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 import net.nonswag.tnl.waypoints.commands.WaypointCommand;
 import net.nonswag.tnl.waypoints.listeners.VisibilityListener;
@@ -21,16 +22,11 @@ public class Waypoints extends TNLPlugin {
         Waypoint.loadAll();
         getCommandManager().registerCommand(new WaypointCommand());
         getEventManager().registerListener(new VisibilityListener());
-        async(() -> getUpdater().update());
         Listener.getOnlinePlayers().forEach(all -> Waypoint.getWaypoints(all.getUniqueId()).forEach(waypoint -> waypoint.show(all)));
+        async(() -> {
+            if (Settings.AUTO_UPDATER.getValue()) new PluginUpdate(this).downloadUpdate();
+        });
     }
-
-    @Nonnull
-    @Override
-    public PluginUpdate getUpdater() {
-        return updater == null ? updater = new PluginUpdate(this) : updater;
-    }
-
     @Override
     public void disable() {
         Listener.getOnlinePlayers().forEach(all -> Waypoint.getWaypoints(all.getUniqueId()).forEach(waypoint -> waypoint.hide(all)));

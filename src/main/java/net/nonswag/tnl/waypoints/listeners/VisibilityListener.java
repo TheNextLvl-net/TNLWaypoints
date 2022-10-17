@@ -2,6 +2,7 @@ package net.nonswag.tnl.waypoints.listeners;
 
 import io.papermc.paper.event.packet.PlayerChunkLoadEvent;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
+import net.nonswag.tnl.listener.events.TNLPlayerJoinEvent;
 import net.nonswag.tnl.waypoints.Waypoints;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 import org.bukkit.Chunk;
@@ -9,7 +10,6 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
 
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
@@ -28,7 +28,7 @@ public class VisibilityListener implements Listener {
     }
 
     @EventHandler
-    public void onJoin(@Nonnull PlayerJoinEvent event) {
+    public void onJoin(@Nonnull TNLPlayerJoinEvent event) {
         showDelayed(event.getPlayer(), null);
     }
 
