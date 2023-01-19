@@ -1,6 +1,6 @@
 name: "TNLWaypoints"
 main: "net.nonswag.tnl.waypoints.Waypoints"
-version: "2.0.0"
+version: "2.0.1"
 api-version: "1.19"
 website: "https://www.thenextlvl.net"
 depend: ["TNLListener"]
