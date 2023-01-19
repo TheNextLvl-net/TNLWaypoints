@@ -1,8 +1,15 @@
 package net.nonswag.tnl.waypoints.api;
 
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
+import lombok.experimental.Accessors;
+import net.nonswag.core.api.annotation.FieldsAreNonnullByDefault;
+import net.nonswag.core.api.annotation.MethodsReturnNonnullByDefault;
 import net.nonswag.core.api.file.formats.JsonFile;
 import net.nonswag.tnl.holograms.api.Hologram;
 import net.nonswag.tnl.listener.api.location.BlockLocation;
@@ -11,47 +18,32 @@ import org.bukkit.*;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.BlockData;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import javax.annotation.ParametersAreNonnullByDefault;
+import java.util.*;
 
 @Getter
+@Setter
+@Accessors(chain = true)
+@FieldsAreNonnullByDefault
+@MethodsReturnNonnullByDefault
+@ParametersAreNonnullByDefault
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class Waypoint {
-    @Nonnull
     private static final HashMap<UUID, List<Waypoint>> waypoints = new HashMap<>();
-    @Nonnull
     private static final JsonFile saves = new JsonFile("plugins/Waypoints", "saves.json");
 
-    @Nonnull
     private final UUID owner;
-    @Nonnull
     private final String name;
-    @Nonnull
     private final BlockLocation location;
-    @Nonnull
-    private Color color;
-    @Nonnull
     private final Hologram hologram;
+    private Color color;
 
-    public Waypoint(@Nonnull UUID owner, @Nonnull String name, @Nonnull BlockLocation location, @Nonnull Color color) {
-        this.hologram = new Hologram().setLines("§8* §7Waypoint§8: §6%s".formatted(name));
-        this.owner = owner;
-        this.name = name;
-        this.location = location;
-        this.color = color;
-        this.hologram.setLocation(location.toLocation().add(0.5, 0.5, 0.5));
+    public Waypoint(UUID owner, String name, BlockLocation location, Color color) {
+        this(owner, name, location, new Hologram().setLines("§8* §7Waypoint§8: §6%s".formatted(name)), color);
+        getHologram().setLocation(getLocation().toLocation().add(0.5, 0.5, 0.5));
     }
 
-    @Nonnull
-    public Waypoint setColor(@Nonnull Color color) {
-        this.color = color;
-        return this;
-    }
-
-    @Nonnull
     public Waypoint register() {
         List<Waypoint> waypoints = getWaypoints(getOwner());
         if (waypoints.contains(this)) throw new IllegalStateException("Waypoint already registered");
@@ -67,8 +59,7 @@ public class Waypoint {
         Waypoint.waypoints.put(getOwner(), waypoints);
     }
 
-    @Nonnull
-    public Waypoint hide(@Nonnull TNLPlayer player) {
+    public Waypoint hide(TNLPlayer player) {
         if (!player.getUniqueId().equals(getOwner())) return this;
         BlockLocation location = getLocation().clone();
         if (!player.worldManager().getWorld().equals(location.getWorld())) return this;
@@ -80,8 +71,7 @@ public class Waypoint {
         return this;
     }
 
-    @Nonnull
-    public Waypoint show(@Nonnull TNLPlayer player) {
+    public Waypoint show(TNLPlayer player) {
         if (!player.getUniqueId().equals(getOwner())) return this;
         Location location = getLocation().clone().subtract(0, 1, 0);
         if (!player.worldManager().getWorld().equals(location.getWorld())) return this;
@@ -101,44 +91,43 @@ public class Waypoint {
         return getName();
     }
 
-    @Nonnull
-    public static List<Waypoint> getWaypoints(@Nonnull UUID owner) {
+    public static List<Waypoint> getWaypoints(UUID owner) {
         return Waypoint.waypoints.getOrDefault(owner, new ArrayList<>());
     }
 
-    @Nonnull
-    public static List<Waypoint> getWaypoints(@Nonnull UUID owner, @Nonnull Chunk chunk) {
+    public static List<Waypoint> getWaypoints(UUID owner, Chunk chunk) {
         List<Waypoint> waypoints = new ArrayList<>(getWaypoints(owner));
         waypoints.removeIf(waypoint -> !waypoint.getLocation().getChunk().equals(chunk));
         return waypoints;
     }
 
     @Nullable
-    public static Waypoint getWaypoint(@Nonnull UUID owner, @Nonnull String name) {
+    public static Waypoint getWaypoint(UUID owner, String name) {
         List<Waypoint> waypoints = getWaypoints(owner);
         for (Waypoint waypoint : waypoints) if (waypoint.getName().equalsIgnoreCase(name)) return waypoint;
         return null;
     }
 
     public static void loadAll() {
-        saves.getJsonElement().getAsJsonObject().entrySet().forEach(entry -> {
-            UUID owner = UUID.fromString(entry.getKey());
-            JsonArray waypoints = entry.getValue().getAsJsonArray();
-            waypoints.forEach(element -> {
-                JsonObject waypoint = element.getAsJsonObject();
-                if (!waypoint.has("name")) return;
-                if (!waypoint.has("location")) return;
-                if (!waypoint.has("color")) return;
-                String name = waypoint.get("name").getAsString();
-                BlockLocation location = parseLocation(waypoint.get("location").getAsString());
-                Color color = Color.getColor(waypoint.get("color").getAsString());
-                if (location != null && color != null) new Waypoint(owner, name, location, color).register();
-            });
+        saves.getRoot().getAsJsonObject().entrySet().forEach(Waypoint::loadEntry);
+    }
+
+    private static void loadEntry(Map.Entry<String, JsonElement> entry) {
+        UUID owner = UUID.fromString(entry.getKey());
+        entry.getValue().getAsJsonArray().forEach(element -> {
+            JsonObject waypoint = element.getAsJsonObject();
+            if (!waypoint.has("name")) return;
+            if (!waypoint.has("location")) return;
+            if (!waypoint.has("color")) return;
+            String name = waypoint.get("name").getAsString();
+            BlockLocation location = parseLocation(waypoint.get("location").getAsString());
+            Color color = Color.getColor(waypoint.get("color").getAsString());
+            if (location != null && color != null) new Waypoint(owner, name, location, color).register();
         });
     }
 
     @Nullable
-    private static BlockLocation parseLocation(@Nonnull String string) {
+    private static BlockLocation parseLocation(String string) {
         String[] split = string.split(", ");
         if (split.length != 4) return null;
         World world = Bukkit.getWorld(split[0]);
@@ -153,19 +142,18 @@ public class Waypoint {
         waypoints.forEach((owner, waypoints) -> {
             if (waypoints.isEmpty()) return;
             JsonArray array = new JsonArray();
-            for (Waypoint waypoint : waypoints) {
+            waypoints.forEach(waypoint -> {
                 JsonObject object = new JsonObject();
                 object.addProperty("name", waypoint.getName());
                 BlockLocation l = waypoint.getLocation();
-                if (l.getWorld() == null) continue;
-                object.addProperty("location", l.getWorld().getName() + ", " + l.getX() + ", " + l.getY() + ", " + l.getZ());
+                if (l.getWorld() == null) return;
+                object.addProperty("location", "%s, %s, %s, %s".formatted(l.getWorld().getName(), l.getX(), l.getY(), l.getZ()));
                 object.addProperty("color", waypoint.getColor().name());
                 array.add(object);
-            }
+            });
             root.add(owner.toString(), array);
         });
-        saves.setJsonElement(root);
-        saves.save();
+        saves.setRoot(root).save();
     }
 
     @Getter
@@ -187,25 +175,22 @@ public class Waypoint {
         RED(Material.RED_STAINED_GLASS),
         BLACK(Material.BLACK_STAINED_GLASS);
 
-        @Nonnull
         private final String name;
-        @Nonnull
         private final Material glass;
         @Nullable
         private BlockData blockData = null;
 
-        Color(@Nonnull Material glass) {
+        Color(Material glass) {
             this.glass = glass;
             this.name = name().toLowerCase().replace("_", "-");
         }
 
-        @Nonnull
         public BlockData getBlockData() {
             return blockData == null ? blockData = glass.createBlockData() : blockData;
         }
 
         @Nullable
-        public static Color getColor(@Nonnull String name) {
+        public static Color getColor(String name) {
             for (Color color : values()) {
                 if (color.name().equalsIgnoreCase(name) || color.getName().equalsIgnoreCase(name)) return color;
             }

@@ -11,32 +11,33 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerChangedWorldEvent;
 
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
+import javax.annotation.ParametersAreNonnullByDefault;
 import java.util.List;
 
+@ParametersAreNonnullByDefault
 public class VisibilityListener implements Listener {
 
     @EventHandler
-    public void onWorldChange(@Nonnull PlayerChangedWorldEvent event) {
+    public void onWorldChange(PlayerChangedWorldEvent event) {
         showDelayed(event.getPlayer(), null);
     }
 
     @EventHandler
-    public void onChunkLoad(@Nonnull PlayerChunkLoadEvent event) {
+    public void onChunkLoad(PlayerChunkLoadEvent event) {
         showDelayed(event.getPlayer(), event.getChunk());
     }
 
     @EventHandler
-    public void onJoin(@Nonnull TNLPlayerJoinEvent event) {
+    public void onJoin(TNLPlayerJoinEvent event) {
         showDelayed(event.getPlayer(), null);
     }
 
-    private void showDelayed(@Nonnull Player player, @Nullable Chunk chunk) {
+    private void showDelayed(Player player, @Nullable Chunk chunk) {
         showDelayed(TNLPlayer.cast(player), chunk);
     }
 
-    private void showDelayed(@Nonnull TNLPlayer player, @Nullable Chunk chunk) {
+    private void showDelayed(TNLPlayer player, @Nullable Chunk chunk) {
         List<Waypoint> waypoints;
         if (chunk == null) waypoints = Waypoint.getWaypoints(player.getUniqueId());
         else waypoints = Waypoint.getWaypoints(player.getUniqueId(), chunk);

@@ -2,8 +2,7 @@ package net.nonswag.tnl.waypoints.commands;
 
 import net.nonswag.core.api.command.CommandSource;
 import net.nonswag.tnl.listener.api.command.simple.SimpleCommand;
-
-import javax.annotation.Nonnull;
+import net.nonswag.tnl.listener.api.player.TNLPlayer;
 
 public class WaypointCommand extends SimpleCommand {
 
@@ -17,7 +16,7 @@ public class WaypointCommand extends SimpleCommand {
     }
 
     @Override
-    public boolean canUse(@Nonnull CommandSource source) {
-        return source.isPlayer();
+    public boolean canUse(CommandSource source) {
+        return source instanceof TNLPlayer;
     }
 }

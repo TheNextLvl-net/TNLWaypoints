@@ -6,7 +6,6 @@ import net.nonswag.tnl.listener.api.command.simple.PlayerSubCommand;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 
 class List extends PlayerSubCommand {
@@ -16,10 +15,9 @@ class List extends PlayerSubCommand {
     }
 
     @Override
-    protected void execute(@Nonnull Invocation invocation) {
+    protected void execute(Invocation invocation) {
         CommandSource source = invocation.source();
-        TNLPlayer player = (TNLPlayer) source;
-        var waypoints = Waypoint.getWaypoints(player.getUniqueId());
+        var waypoints = Waypoint.getWaypoints(((TNLPlayer) source).getUniqueId());
         if (!waypoints.isEmpty()) {
             var names = new ArrayList<String>();
             waypoints.forEach(waypoint -> names.add(waypoint.getName()));

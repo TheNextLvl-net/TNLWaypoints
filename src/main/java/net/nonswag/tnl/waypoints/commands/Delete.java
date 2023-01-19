@@ -6,7 +6,6 @@ import net.nonswag.tnl.listener.api.command.simple.PlayerSubCommand;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,7 @@ class Delete extends PlayerSubCommand {
     }
 
     @Override
-    protected void execute(@Nonnull Invocation invocation) {
+    protected void execute(Invocation invocation) {
         TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         if (args.length < 2) throw new InvalidUseException(this);
@@ -27,9 +26,8 @@ class Delete extends PlayerSubCommand {
         waypoint.hide(player).unregister();
     }
 
-    @Nonnull
     @Override
-    protected List<String> suggest(@Nonnull Invocation invocation) {
+    protected List<String> suggest(Invocation invocation) {
         TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         List<String> suggestions = new ArrayList<>();
@@ -39,7 +37,7 @@ class Delete extends PlayerSubCommand {
     }
 
     @Override
-    public void usage(@Nonnull Invocation invocation) {
+    public void usage(Invocation invocation) {
         invocation.source().sendMessage("%prefix% §c/waypoint delete §8[§6Waypoint§8]");
     }
 }

@@ -8,7 +8,6 @@ import net.nonswag.tnl.listener.api.player.manager.WorldManager;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 import org.bukkit.Location;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,8 +18,8 @@ class Teleport extends PlayerSubCommand {
     }
 
     @Override
-    protected void execute(@Nonnull Invocation invocation) {
-        TNLPlayer player = (TNLPlayer) invocation.source().player();
+    protected void execute(Invocation invocation) {
+        TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         if (args.length < 2) throw new InvalidUseException(this);
         Waypoint waypoint = Waypoint.getWaypoint(player.getUniqueId(), args[1]);
@@ -33,9 +32,8 @@ class Teleport extends PlayerSubCommand {
         player.messenger().sendMessage("%prefix% §aTeleported to waypoint §6" + waypoint);
     }
 
-    @Nonnull
     @Override
-    protected List<String> suggest(@Nonnull Invocation invocation) {
+    protected List<String> suggest(Invocation invocation) {
         TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         List<String> suggestions = new ArrayList<>();
@@ -45,7 +43,7 @@ class Teleport extends PlayerSubCommand {
     }
 
     @Override
-    public void usage(@Nonnull Invocation invocation) {
+    public void usage(Invocation invocation) {
         invocation.source().sendMessage("%prefix% §c/waypoint teleport §8[§6Waypoint§8]");
     }
 }

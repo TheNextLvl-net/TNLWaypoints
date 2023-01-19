@@ -6,7 +6,6 @@ import net.nonswag.tnl.listener.api.command.simple.PlayerSubCommand;
 import net.nonswag.tnl.listener.api.player.TNLPlayer;
 import net.nonswag.tnl.waypoints.api.Waypoint;
 
-import javax.annotation.Nonnull;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,7 @@ class Color extends PlayerSubCommand {
     }
 
     @Override
-    protected void execute(@Nonnull Invocation invocation) {
+    protected void execute(Invocation invocation) {
         TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         if (args.length < 2) throw new InvalidUseException(this);
@@ -32,22 +31,19 @@ class Color extends PlayerSubCommand {
         } else player.messenger().sendMessage("%prefix% §7Color §8(§a" + waypoint + "§8): §6" + waypoint.getColor());
     }
 
-    @Nonnull
     @Override
-    protected List<String> suggest(@Nonnull Invocation invocation) {
+    protected List<String> suggest(Invocation invocation) {
         TNLPlayer player = (TNLPlayer) invocation.source();
         String[] args = invocation.arguments();
         List<String> suggestions = new ArrayList<>();
         if (args.length == 2) {
             Waypoint.getWaypoints(player.getUniqueId()).forEach(waypoint -> suggestions.add(waypoint.getName()));
-        } else if (args.length == 3) {
-            for (Waypoint.Color color : Waypoint.Color.values()) suggestions.add(color.getName());
-        }
+        } else if (args.length == 3) for (var color : Waypoint.Color.values()) suggestions.add(color.getName());
         return suggestions;
     }
 
     @Override
-    public void usage(@Nonnull Invocation invocation) {
+    public void usage(Invocation invocation) {
         invocation.source().sendMessage("%prefix% §c/waypoint color §8[§6Waypoint§8] §8(§6Color§8)");
     }
 }
